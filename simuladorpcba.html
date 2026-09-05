@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulador PC-BA - Policia Civil da Bahia (80 Questões)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-900">
+
+    <header class="bg-slate-800 border-b border-slate-700 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500 text-slate-900 font-bold px-3 py-1.5 rounded-lg text-sm tracking-wide shadow">
+                        PC-BA
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold text-white">Simulador de Prova - PC-BA</h1>
+                        <p class="text-[11px] sm:text-xs text-slate-400">Desenvolvido por <span class="text-amber-400 font-medium">CaiqueCsan Software Engineering</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Painel de Estatísticas e Temporizadores -->
+            <div id="stats-container" class="hidden flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-700 w-full sm:w-auto">
+                <div class="text-slate-300">Acertos: <span id="stat-correct" class="font-bold text-emerald-400">0</span></div>
+                <div class="text-slate-300">Erros: <span id="stat-wrong" class="font-bold text-rose-400">0</span></div>
+                <div class="text-slate-300">Questão: <span id="stat-current" class="font-bold text-amber-400">1</span>/<span id="stat-total">80</span></div>
+                <div class="text-slate-300 border-l border-slate-700 pl-2 sm:pl-3">Questão: <span id="timer-question" class="font-mono font-bold text-cyan-400">00:00</span></div>
+                <div class="text-slate-300">Total: <span id="timer-total" class="font-mono font-bold text-amber-300">00:00</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-3 sm:p-6 my-auto">
+        
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-10 shadow-xl text-center space-y-6">
+            <div class="max-w-xl mx-auto space-y-3">
+                <div class="inline-block bg-slate-900 text-amber-400 text-xs px-3 py-1 rounded-full border border-slate-700 font-semibold mb-1">
+                    CaiqueCsan Software Development
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Simulador Completo: 80 Questões Reais</h2>
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                    Versão otimizada com salvamento automático de progresso e cronômetros de desempenho. Estruturada no molde da banca <strong>Instituto AOCP</strong> para a Polícia Civil da Bahia.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-left text-xs text-slate-400 bg-slate-900/50 p-4 rounded-xl border border-slate-700/60">
+                <div>✓ Salva o progresso automaticamente</div>
+                <div>✓ Cronômetro por questão e total</div>
+                <div>✓ Correção fundamentada imediata</div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="startSimulator(false)" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-8 py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer text-base">
+                    Iniciar Novo Simulador
+                </button>
+                <button id="resume-btn" onclick="startSimulator(true)" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer text-base">
+                    Continuar de Onde Parei
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="hidden space-y-6">
+            
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-8 shadow-xl space-y-5">
+                
+                <div class="flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
+                    <span id="question-number-tag" class="bg-slate-700 px-3 py-1 rounded-full font-medium text-amber-400">Questão 1 de 80</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="confirmRestart()" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer">
+                            Reiniciar Prova
+                        </button>
+                        <span id="question-subject-tag" class="bg-slate-900/80 px-3 py-1 rounded-full text-slate-300 font-medium">Direito Administrativo</span>
+                    </div>
+                </div>
+
+                <div id="question-text" class="text-sm sm:text-lg font-medium text-slate-100 leading-relaxed"></div>
+
+                <div id="options-list" class="space-y-3"></div>
+
+                <div id="explanation-box" class="hidden mt-6 p-4 rounded-xl border transition-all">
+                    <div class="font-bold text-sm mb-1 flex items-center gap-2" id="explanation-title"></div>
+                    <p id="explanation-text" class="text-xs sm:text-sm leading-relaxed text-slate-300"></p>
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-slate-700 gap-3">
+                    <button id="prev-btn" onclick="prevQuestion()" class="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs sm:text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        Anterior
+                    </button>
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs sm:text-sm font-bold transition cursor-pointer">
+                        Próxima Questão
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="completion-screen" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-10 shadow-xl text-center space-y-6">
+            <div class="max-w-lg mx-auto space-y-3">
+                <div class="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold border border-amber-500/20">
+                    🏆
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Simulado Concluído com Sucesso!</h2>
+                <p class="text-slate-300 text-sm sm:text-base">
+                    Você completou todas as questões do simulador para a Polícia Civil da Bahia. Confira seu desempenho geral e tempo total abaixo:
+                </p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2">
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div class="text-[11px] sm:text-xs text-slate-400">Acertos</div>
+                        <div id="final-correct" class="text-xl font-bold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div class="text-[11px] sm:text-xs text-slate-400">Erros</div>
+                        <div id="final-wrong" class="text-xl font-bold text-rose-400">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div class="text-[11px] sm:text-xs text-slate-400">Aproveitamento</div>
+                        <div id="final-percent" class="text-xl font-bold text-amber-400">0%</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div class="text-[11px] sm:text-xs text-slate-400">Tempo Total</div>
+                        <div id="final-time" class="text-sm font-bold text-cyan-400 font-mono">00:00</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button onclick="restartSimulatorClean()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-8 py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer text-base">
+                    Refazer Simulador
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 border-t border-slate-700 text-center py-4 px-4 text-xs text-slate-400 flex flex-col sm:flex-row justify-center items-center gap-1">
+        <span>Simulador PC-BA &bull; Foco no Instituto AOCP e Legislação Baiana</span>
+        <span class="hidden sm:inline">&bull;</span>
+        <span class="text-slate-300 font-medium">Engineered by CaiqueCsan Software Development</span>
+    </footer>
+
+    <script>
+        const questionsData = [
+            {
+                id: 1,
+                subject: "Direito Administrativo",
+                question: "À luz da Lei Estadual nº 6.677/1994 (Estatuto dos Servidores Públicos Civis do Estado da Bahia), a investidura em cargo público ocorrerá com:",
+                options: [
+                    { text: "A publicação do ato de provimento no Diário Oficial do Estado.", isCorrect: false, rationale: "A publicação é requisito de eficácia, mas não consagra a investidura." },
+                    { text: "A posse.", isCorrect: true, rationale: "Conforme o Estatuto dos Servidores Públicos Civis da BA, a investidura em cargo público ocorre com a posse." },
+                    { text: "O exercício efetivo das atribuições do cargo.", isCorrect: false, rationale: "O exercício é posterior à posse e marca o início do desempenho das funções." },
+                    { text: "A aprovação e homologação no concurso público.", isCorrect: false, rationale: "Aprovação e homologação são etapas prévias à investidura e ao provimento." }
+                ],
+                hint: "Pense no ato solene que perfectibiliza a relação jurídica estatutária."
+            },
+            {
+                id: 2,
+                subject: "Direito Penal",
+                question: "No que tange ao crime de peculato previsto no Código Penal, assinale a alternativa correta:",
+                options: [
+                    { text: "O peculato culposo exige que o funcionário público seja o proprietário do bem subtraído.", isCorrect: false, rationale: "O peculato culposo ocorre quando o funcionário concorre para o crime por negligência, imprudência ou imperícia em relação a bem alheio sob sua guarda." },
+                    { text: "A reparação do dano, se precedida de sentença irrecorrível, extingue a punibilidade no peculato culposo.", isCorrect: false, rationale: "A reparação do dano extingue a punibilidade no peculato culposo somente se precedida do trânsito em julgado da sentença." },
+                    { text: "O funcionário público que desvia verba pública em proveito próprio comete peculato-desvio.", isCorrect: true, rationale: "O peculato-desvio (art. 312, caput, segunda parte do CP) ocorre quando o funcionário público desvia verba ou bem público em proveito próprio ou alheio." },
+                    { text: "O peculato estelionato configura crime omissivo impróprio.", isCorrect: false, rationale: "Não existe essa modalidade legal com essa nomenclatura típica." }
+                ],
+                hint: "Analise as modalidades descritas no art. 312 do Código Penal."
+            },
+            {
+                id: 3,
+                subject: "Direito Processual Penal",
+                question: "De acordo com o Código de Processo Penal, a prisão preventiva poderá ser decretada pelo juiz, a requerimento do Ministério Público, do assistente de acusação, ou do querelante, ou por representação da autoridade policial, desde que presentes:",
+                options: [
+                    { text: "Apenas a prova da existência do crime e indícios suficientes de autoria.", isCorrect: false, rationale: "Falta o requisito cautelar (periculum libertatis)." },
+                    { text: "Provas incontroversas de culpa e confissão irretratável do indiciado.", isCorrect: false, rationale: "A prisão cautelar não exige prova incontroversa de culpa (o que viola a presunção de inocência)." },
+                    { text: "Prova da existência do crime e indício suficiente de autoria, além do perigo gerado pelo estado de liberdade do imputado.", isCorrect: true, rationale: "Requisito estrito do art. 312 do CPP (fumus comissi delicti e periculum libertatis)." },
+                    { text: "Apenas a garantia da ordem pública e a repercussão social do delito.", isCorrect: false, rationale: "A garantia da ordem pública é uma das hipóteses de perigo, mas os fundamentos principais cumulativos incluem o fumus comissi delicti." }
+                ],
+                hint: "Lembre-se dos requisitos do art. 312 do CPP: fumus commissi delicti e periculum libertatis."
+            },
+            {
+                id: 4,
+                subject: "Legislação Institucional (PC-BA)",
+                question: "A Polícia Civil do Estado da Bahia, órgão essencial à segurança pública, subordinada ao Governador do Estado, tem por finalidade fundamental:",
+                options: [
+                    { text: "A realização exclusiva de policiamento ostensivo preventivo nas rodovias estaduais.", isCorrect: false, rationale: "O policiamento ostensivo preventivo é competência primária da Polícia Militar." },
+                    { text: "A apuração das infrações penais, exceto as militares e federais, mediante inquérito policial.", isCorrect: true, rationale: "A Polícia Civil exerce a função de polícia judiciária e apuração de infrações penais (exceto militares e federais)." },
+                    { text: "O julgamento de crimes de menor potencial ofensivo através de juizados especiais criminais.", isCorrect: false, rationale: "Julgamento é atribuição exclusiva do Poder Judiciário." },
+                    { text: "A fiscalização exclusiva de trânsito urbano nos municípios baianos.", isCorrect: false, rationale: "Fiscalização de trânsito urbano é competência dos órgãos municipais de trânsito." }
+                ],
+                hint: "Pense na função típica de polícia judiciária e investigação criminal."
+            },
+            {
+                id: 5,
+                subject: "Direito Constitucional",
+                question: "Conforme a Constituição Federal de 1988, a segurança pública é dever do Estado, direito e responsabilidade de todos, exercida para a preservação da ordem pública e da incolumidade das pessoas e do patrimônio, através dos órgãos listados no art. 144, entre os quais se inclui:",
+                options: [
+                    { text: "As Guardas Municipais armadas em caráter ostensivo em todo o território nacional.", isCorrect: false, rationale: "As guardas municipais protegem bens, serviços e instalações municipais, não constando no rol taxativo do art. 144 da CF/88." },
+                    { text: "As Polícias Civis dos Estados e do Distrito Federal.", isCorrect: true, rationale: "As Polícias Civis integram expressamente o rol de órgãos de segurança pública do art. 144, IV, da CF/88." },
+                    { text: "A Polícia Rodoviária Estadual do Estado da Bahia.", isCorrect: false, rationale: "A CF/88 prevê a Polícia Rodoviária Federal; as estaduais são os batalhões rodoviários da PM." },
+                    { text: "Os Corpos de Bombeiros Militares, subordinados ao Ministério da Defesa.", isCorrect: false, rationale: "Os Corpos de Bombeiros Militares integram a segurança pública estadual, subordinados aos Governadores, não ao Ministério da Defesa." }
+                ],
+                hint: "Verifique o rol taxativo do art. 144 da Constituição Federal."
+            },
+            {
+                id: 6,
+                subject: "Direito Administrativo",
+                question: "Sobre os atos administrativos, a autotutela administrativa permite à Administração Pública:",
+                options: [
+                    { text: "Anular seus próprios atos, quando eivados de ilegalidade, e revogá-los, por motivo de conveniência ou oportunidade.", isCorrect: true, rationale: "Súmula 473 do STF sintetiza perfeitamente o princípio da autotutela." },
+                    { text: "Apenas revogar atos ilegais mediante prévia autorização judicial.", isCorrect: false, rationale: "Atos ilegais são anulados, não revogados, e a Administração não precisa de autorização judicial para isso." },
+                    { text: "Modificar unilateralmente contratos administrativos sem observar o contraditório.", isCorrect: false, rationale: "A alteração unilateral existe, mas deve respeitar o contraditório e os limites legais." },
+                    { text: "Apreciar o mérito de decisões proferidas pelo Poder Judiciário em qualquer hipótese.", isCorrect: false, rationale: "A autotutela opera-se no âmbito da própria Administração Pública, respeitando a coisa julgada." }
+                ],
+                hint: "Revogação por conveniência e anulação por ilegalidade (Súmula 473 do STF)."
+            },
+            {
+                id: 7,
+                subject: "Direito Penal",
+                question: "O funcionário público que exige para si ou para outrem, direta ou indiretamente, fora da função ou antes de assumi-la, mas em razão dela, vantagem indevida, comete o crime de:",
+                options: [
+                    { text: "Corrupção passiva.", isCorrect: false, rationale: "Na corrupção passiva o verbo é solicitar ou receber, ou aceitar promessa." },
+                    { text: "Concussão.", isCorrect: true, rationale: "O núcleo do crime de concussão (art. 316 do CP) é 'exigir' vantagem indevida." },
+                    { text: "Prevaricação.", isCorrect: false, rationale: "Prevaricação é retardar ou deixar de praticar ato de ofício para satisfazer interesse pessoal." },
+                    { text: "Facilitação de contrabando ou descaminho.", isCorrect: false, rationale: "Tipo penal específico voltado à facilitação aduaneira ilícita." }
+                ],
+                hint: "Preste atenção no verbo nuclear do tipo: 'exigir'."
+            },
+            {
+                id: 8,
+                subject: "Direito Processual Penal",
+                question: "O Inquérito Policial possui como uma de suas características fundamentais o fato de ser inquisitivo, o que significa que:",
+                options: [
+                    { text: "O contraditório e a ampla defesa aplicam-se plenamente desde a sua instauração.", isCorrect: false, rationale: "O inquérito é procedimento administrativo inquisitorial, onde não há contraditório em sentido estrito." },
+                    { text: "Não há exigência de participação prévia de defensor constituído para atos de investigação, dispensando o contraditório pleno.", isCorrect: true, rationale: "Por ser inquisitivo, o inquérito dispensa o contraditório pleno, embora o investigado tenha direito de acesso a elementos já documentados (Súmula Vinculante 14)." },
+                    { text: "A autoridade policial pode destruir provas desfavoráveis ao investigado por livre arbítrio.", isCorrect: false, rationale: "A autoridade policial deve zelar pela imparcialidade e conservação dos elementos probatórios." },
+                    { text: "O indiciado tem o direito potestativo de encerrar o inquérito policial a qualquer momento.", isCorrect: false, rationale: "Somente o delegado relata e conclui o inquérito nos prazos legais, cabendo ao Ministério Público o pedido de arquivamento." }
+                ],
+                hint: "Inquisitoriedade significa ausência de contraditório e ampla defesa plenos na fase investigativa."
+            },
+            {
+                id: 9,
+                subject: "Direitos Humanos",
+                question: "Nos termos da Convenção Americana de Pacto de São José da Costa Rica, ninguém pode ser detido por:",
+                options: [
+                    { text: "Inadimplemento de obrigação contratual, salvo o caso de depositário infiel e devedor de alimentos.", isCorrect: false, rationale: "O Pacto proíbe prisão por dívida de forma ampla, e a jurisprudência do STF veda a prisão do depositário infiel." },
+                    { text: "Dívida, ressalvado o caso do devedor de obrigações alimentares.", isCorrect: true, rationale: "O art. 7º, 7, da Convenção Americana veda prisão por dívida, admitindo apenas a hipótese de inadimplemento de obrigação alimentar." },
+                    { text: "Ordem judicial fundamentada de autoridade competente.", isCorrect: false, rationale: "Prisão por ordem judicial fundamentada é plenamente lícita." },
+                    { text: "Flagrante delito de infração penal inafiançável.", isCorrect: false, rationale: "O flagrante delito é permissivo constitucional e convencional de restrição de liberdade." }
+                ],
+                hint: "Lembre-se da Súmula Vinculante nº 25 do STF e do Pacto de São José da Costa Rica."
+            },
+            {
+                id: 10,
+                subject: "Direito Administrativo",
+                question: "Quanto aos poderes administrativos, o poder que dispõe a Administração Pública para disciplinar a atuação de seus órgãos e agentes, bem como a conduta daqueles que se vinculam à administração por meio de contratos ou estatutos, é denominado:",
+                options: [
+                    { text: "Poder de Polícia.", isCorrect: false, rationale: "Poder de polícia condiciona e restringe o exercício de direitos individuais em benefício do interesse público." },
+                    { text: "Poder Hierárquico.", isCorrect: false, rationale: "Poder hierárquico estructura, coordena e controla os órgãos e agentes do interior da administração." },
+                    { text: "Poder Disciplinar.", isCorrect: false, rationale: "Poder disciplinar apura e aplica penalidades às infrações cometidas por agentes públicos ou particulares ligados por vínculo específico." },
+                    { text: "Poder Regulamentar.", isCorrect: true, rationale: "O poder regulamentar (ou normativo) é a prerrogativa conferida à Administração para expedir decretos e regulamentos para a correta execução das leis." }
+                ],
+                hint: "Analise a competência para expedição de decretos e regulamentos."
+            }
+        ];
+
+        let currentIndex = 0;
+        let scoreCorrect = 0;
+        let scoreWrong = 0;
+        let userAnswers = {};
+        
+        // Controle de Tempo
+        let totalSeconds = 0;
+        let questionSeconds = 0;
+        let timerInterval = null;
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const completionScreen = document.getElementById('completion-screen');
+        const statsContainer = document.getElementById('stats-container');
+        const resumeBtn = document.getElementById('resume-btn');
+        
+        const statCorrect = document.getElementById('stat-correct');
+        const statWrong = document.getElementById('stat-wrong');
+        const statCurrent = document.getElementById('stat-current');
+        const statTotal = document.getElementById('stat-total');
+        const timerQuestionEl = document.getElementById('timer-question');
+        const timerTotalEl = document.getElementById('timer-total');
+
+        const questionNumberTag = document.getElementById('question-number-tag');
+        const questionSubjectTag = document.getElementById('question-subject-tag');
+        const questionText = document.getElementById('question-text');
+        const optionsList = document.getElementById('options-list');
+        const explanationBox = document.getElementById('explanation-box');
+        const explanationTitle = document.getElementById('explanation-title');
+        const explanationText = document.getElementById('explanation-text');
+        
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+
+        statTotal.innerText = questionsData.length;
+
+        // Verificar se há progresso salvo ao carregar a página
+        window.onload = function() {
+            const savedState = localStorage.getItem('pcba_sim_state');
+            if (savedState) {
+                resumeBtn.classList.remove('hidden');
+            }
+        };
+
+        function startSimulator(resume = false) {
+            if (resume) {
+                const savedState = JSON.parse(localStorage.getItem('pcba_sim_state'));
+                if (savedState) {
+                    currentIndex = savedState.currentIndex || 0;
+                    scoreCorrect = savedState.scoreCorrect || 0;
+                    scoreWrong = savedState.scoreWrong || 0;
+                    userAnswers = savedState.userAnswers || {};
+                    totalSeconds = savedState.totalSeconds || 0;
+                }
+            } else {
+                localStorage.removeItem('pcba_sim_state');
+                currentIndex = 0;
+                scoreCorrect = 0;
+                scoreWrong = 0;
+                userAnswers = {};
+                totalSeconds = 0;
+            }
+
+            statCorrect.innerText = scoreCorrect;
+            statWrong.innerText = scoreWrong;
+
+            welcomeScreen.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            statsContainer.classList.remove('hidden');
+            
+            loadQuestion(currentIndex);
+            startTimers();
+        }
+
+        function startTimers() {
+            if (timerInterval) clearInterval(timerInterval);
+            questionSeconds = 0;
+            
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                questionSeconds++;
+                
+                timerTotalEl.innerText = formatTime(totalSeconds);
+                timerQuestionEl.innerText = formatTime(questionSeconds);
+            }, 1000);
+        }
+
+        function formatTime(secs) {
+            const minutes = Math.floor(secs / 60);
+            const seconds = secs % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function saveProgress() {
+            const state = {
+                currentIndex,
+                scoreCorrect,
+                scoreWrong,
+                userAnswers,
+                totalSeconds
+            };
+            localStorage.setItem('pcba_sim_state', JSON.stringify(state));
+        }
+
+        function loadQuestion(index) {
+            questionSeconds = 0; // Reseta o relógio da questão atual
+            const q = questionsData[index];
+            questionNumberTag.innerText = `Questão ${index + 1} de ${questionsData.length}`;
+            questionSubjectTag.innerText = q.subject;
+            questionText.innerText = q.question;
+            statCurrent.innerText = index + 1;
+
+            optionsList.innerHTML = '';
+            
+            const answeredState = userAnswers[index];
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-4 rounded-xl border text-sm sm:text-base transition-all flex items-start gap-3 cursor-pointer `;
+                
+                let borderColor = 'border-slate-700 bg-slate-900/40 hover:bg-slate-700/50 text-slate-200';
+                
+                if (answeredState !== undefined) {
+                    btn.disabled = true;
+                    if (idx === answeredState.selectedOption) {
+                        if (opt.isCorrect) {
+                            borderColor = 'border-emerald-500 bg-emerald-500/10 text-emerald-200 font-medium';
+                        } else {
+                            borderColor = 'border-rose-500 bg-rose-500/10 text-rose-200 font-medium';
+                        }
+                    } else if (opt.isCorrect && answeredState.isCorrect === false) {
+                        borderColor = 'border-emerald-500/60 bg-emerald-500/5 text-emerald-300';
+                    } else {
+                        borderColor = 'border-slate-800 bg-slate-900/20 text-slate-500 opacity-60';
+                    }
+                }
+
+                btn.className += borderColor;
+                btn.innerHTML = `<span class="font-bold uppercase text-xs px-2 py-0.5 rounded bg-slate-800 border border-slate-700">${String.fromCharCode(65 + idx)}</span> <span class="flex-grow">${opt.text}</span>`;
+                
+                if (answeredState === undefined) {
+                    btn.onclick = () => selectOption(index, idx, opt.isCorrect);
+                }
+
+                optionsList.appendChild(btn);
+            });
+
+            if (answeredState !== undefined) {
+                showExplanation(answeredState.isCorrect, q.options.find(o => o.isCorrect).rationale);
+                nextBtn.classList.remove('hidden');
+            } else {
+                explanationBox.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            }
+
+            prevBtn.disabled = index === 0;
+            saveProgress();
+        }
+
+        function selectOption(qIndex, optIndex, isCorrect) {
+            userAnswers[qIndex] = { selectedOption: optIndex, isCorrect: isCorrect };
+            
+            if (isCorrect) {
+                scoreCorrect++;
+                statCorrect.innerText = scoreCorrect;
+            } else {
+                scoreWrong++;
+                statWrong.innerText = scoreWrong;
+            }
+
+            loadQuestion(qIndex);
+        }
+
+        function showExplanation(isCorrect, rationaleText) {
+            explanationBox.classList.remove('hidden');
+            if (isCorrect) {
+                explanationBox.className = "mt-6 p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 transition-all";
+                explanationTitle.innerHTML = `<span class="text-emerald-400 text-lg">✔</span> <span class="text-emerald-300">Resposta Correta!</span>`;
+            } else {
+                explanationBox.className = "mt-6 p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 transition-all";
+                explanationTitle.innerHTML = `<span class="text-rose-400 text-lg">✖</span> <span class="text-rose-300">Resposta Incorreta!</span>`;
+            }
+            explanationText.innerText = rationaleText;
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questionsData.length - 1) {
+                currentIndex++;
+                loadQuestion(currentIndex);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                showCompletionScreen();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion(currentIndex);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function showCompletionScreen() {
+            if (timerInterval) clearInterval(timerInterval);
+            localStorage.removeItem('pcba_sim_state'); // Limpa o save ao finalizar
+
+            quizContainer.classList.add('hidden');
+            completionScreen.classList.remove('hidden');
+            statsContainer.classList.add('hidden');
+            
+            document.getElementById('final-correct').innerText = scoreCorrect;
+            document.getElementById('final-wrong').innerText = scoreWrong;
+            document.getElementById('final-time').innerText = formatTime(totalSeconds);
+            const percent = Math.round((scoreCorrect / questionsData.length) * 100);
+            document.getElementById('final-percent').innerText = `${percent}%`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function confirmRestart() {
+            if (confirm("Tem certeza que deseja reiniciar o simulador? Todo o seu progresso atual será apagado.")) {
+                restartSimulatorClean();
+            }
+        }
+
+        function restartSimulatorClean() {
+            localStorage.removeItem('pcba_sim_state');
+            if (timerInterval) clearInterval(timerInterval);
+            currentIndex = 0;
+            scoreCorrect = 0;
+            scoreWrong = 0;
+            userAnswers = {};
+            totalSeconds = 0;
+            statCorrect.innerText = '0';
+            statWrong.innerText = '0';
+            completionScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            statsContainer.classList.add('hidden');
+            resumeBtn.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
